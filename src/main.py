@@ -25,7 +25,6 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
 # 1. Connect to Oracle Database
-print("Connecting to Oracle Database...")
 try:
     connection = oracledb.connect(
         user=os.getenv("ORACLE_USER"),
@@ -38,13 +37,10 @@ except Exception as e:
     sys.exit(1)
 
 # 2. Initialize Models
-print("Initializing Gemini Models...")
 embedding_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-2")
 chat_model = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
 
 # 3. Configure Oracle Vector Store
-print("Configuring Oracle Vector Store...")
-# OracleVS will automatically create the table if it does not exist
 vector_store = OracleVS(
     client=connection,
     embedding_function=embedding_model,
@@ -52,17 +48,14 @@ vector_store = OracleVS(
     distance_strategy="COSINE"
 )
 
-# 4. Ingest Document (Simple single file chunking)
-print("Ingesting corpus.txt...")
+# 4. Ingest Document
 try:
     with open(CORPUS_PATH, "r", encoding="utf-8") as f:
         text_content = f.read()
     
-    # Very simple manual split by double newlines (paragraphs)
-    # For a real app, use RecursiveCharacterTextSplitter
     chunks = [chunk.strip() for chunk in text_content.split("\n\n") if chunk.strip()]
     
-    # Batch insertion to avoid Gemini Free Tier rate limits
+    # Batch insertion to avoid rate limiting from Gemini
     batch_size = 5
     total_batches = (len(chunks) - 1) // batch_size + 1
     
@@ -85,12 +78,8 @@ except Exception as e:
     print(f"Warning: Could not ingest corpus: {e}")
 
 # 5. Perform RAG
-print("\n--- Testing RAG Pipeline ---")
-
-# Setup the retriever
 retriever = vector_store.as_retriever(search_kwargs={"k": 2})
 
-# Define the RAG prompt template
 template = """Answer the question based only on the following context:
 {context}
 
@@ -109,14 +98,9 @@ rag_chain = (
     | StrOutputParser()
 )
 
-# Ask a question
 question = "Why is Oracle AI Vector Search useful for RAG?"
 print(f"Question: {question}")
-print("Thinking...")
-
 answer = rag_chain.invoke(question)
-print(f"\nAnswer: {answer}\n")
+print(f"Answer: {answer}")
 
-# Close connection
 connection.close()
-print("Disconnected from database.")

@@ -1,4 +1,5 @@
 import os
+import asyncio
 import sys
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
@@ -25,13 +26,9 @@ if missing_envs:
     print(f"Error: Missing required environment variables: {', '.join(missing_envs)}")
     sys.exit(1)
 
-# Initialize FastAPI app
 app = FastAPI(title="Oracle RAG API")
 
-# Setup Global variables for LangChain & Oracle
-connection = None
-rag_chain = None
-vector_store = None
+connection, rag_chain, vector_store = None, None, None
 
 @app.on_event("startup")
 def startup_event():
@@ -87,7 +84,6 @@ def shutdown_event():
         connection.close()
         print("Disconnected from Oracle Database.")
 
-# Data Models
 class ChatRequest(BaseModel):
     prompt: str
 
@@ -97,7 +93,6 @@ class ChatResponse(BaseModel):
 class IngestResponse(BaseModel):
     message: str
 
-# API Endpoints
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
     if not rag_chain:
@@ -120,30 +115,36 @@ async def ingest_endpoint():
             
         chunks = [chunk.strip() for chunk in text_content.split("\n\n") if chunk.strip()]
         
-        # Batch insertion to avoid Gemini Free Tier rate limits (429 RESOURCE_EXHAUSTED)
-        batch_size = 5
+        batch_size = 50
         total_batches = (len(chunks) - 1) // batch_size + 1
         
         for i in range(0, len(chunks), batch_size):
             batch_chunks = chunks[i:i + batch_size]
-            batch_metadatas = [{"source": CORPUS_PATH, "chunk_index": j} for j in range(i, i + len(batch_chunks))]
             
-            vector_store.add_texts(
-                texts=batch_chunks,
-                metadatas=batch_metadatas
-            )
+            max_retries = 5
+            for attempt in range(max_retries):
+                batch_metadatas = [{"source": CORPUS_PATH, "chunk_index": j} for j in range(i, i + len(batch_chunks))]
+                
+                try:
+                    vector_store.add_texts(texts=batch_chunks, metadatas=batch_metadatas)
+                    break
+                except Exception as e:
+                    if attempt < max_retries - 1:
+                        wait = 15 * (attempt + 1)
+                        print(f"Rate limited on batch {i//batch_size + 1}, retrying in {wait}s...")
+                        await asyncio.sleep(wait)
+                    else:
+                        raise
+            
             print(f"Ingested batch {i//batch_size + 1}/{total_batches}")
             
-            # Sleep to prevent hitting rate limits
             if i + batch_size < len(chunks):
-                import asyncio
-                await asyncio.sleep(4)
+                await asyncio.sleep(8)
                 
         return IngestResponse(message=f"Successfully added {len(chunks)} chunks to Oracle Vector Store.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Mount static files to serve the frontend
 import os as _os
 if not _os.path.exists(STATIC_PATH):
     _os.makedirs(STATIC_PATH)
