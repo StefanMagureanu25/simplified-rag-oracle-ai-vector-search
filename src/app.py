@@ -12,6 +12,10 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CORPUS_PATH = os.path.join(BASE_DIR, "data", "corpus.txt")
+STATIC_PATH = os.path.join(BASE_DIR, "static")
+
 # 1. Initialization and Environment Check
 load_dotenv()
 required_envs = ["GOOGLE_API_KEY", "ORACLE_USER", "ORACLE_PASSWORD", "ORACLE_DSN"]
@@ -111,26 +115,41 @@ async def ingest_endpoint():
         raise HTTPException(status_code=500, detail="Vector Store is not initialized.")
     
     try:
-        with open("corpus.txt", "r", encoding="utf-8") as f:
+        with open(CORPUS_PATH, "r", encoding="utf-8") as f:
             text_content = f.read()
             
         chunks = [chunk.strip() for chunk in text_content.split("\n\n") if chunk.strip()]
         
-        vector_store.add_texts(
-            texts=chunks,
-            metadatas=[{"source": "corpus.txt", "chunk_index": i} for i in range(len(chunks))]
-        )
+        # Batch insertion to avoid Gemini Free Tier rate limits (429 RESOURCE_EXHAUSTED)
+        batch_size = 5
+        total_batches = (len(chunks) - 1) // batch_size + 1
+        
+        for i in range(0, len(chunks), batch_size):
+            batch_chunks = chunks[i:i + batch_size]
+            batch_metadatas = [{"source": CORPUS_PATH, "chunk_index": j} for j in range(i, i + len(batch_chunks))]
+            
+            vector_store.add_texts(
+                texts=batch_chunks,
+                metadatas=batch_metadatas
+            )
+            print(f"Ingested batch {i//batch_size + 1}/{total_batches}")
+            
+            # Sleep to prevent hitting rate limits
+            if i + batch_size < len(chunks):
+                import asyncio
+                await asyncio.sleep(4)
+                
         return IngestResponse(message=f"Successfully added {len(chunks)} chunks to Oracle Vector Store.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 # Mount static files to serve the frontend
 import os as _os
-if not _os.path.exists("static"):
-    _os.makedirs("static")
+if not _os.path.exists(STATIC_PATH):
+    _os.makedirs(STATIC_PATH)
     
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
 
 @app.get("/")
 async def serve_frontend():
-    return FileResponse("static/index.html")
+    return FileResponse(_os.path.join(STATIC_PATH, "index.html"))

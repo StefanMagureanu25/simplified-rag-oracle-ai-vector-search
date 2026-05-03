@@ -2,6 +2,9 @@ import os
 import sys
 from dotenv import load_dotenv
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CORPUS_PATH = os.path.join(BASE_DIR, "data", "corpus.txt")
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -52,18 +55,31 @@ vector_store = OracleVS(
 # 4. Ingest Document (Simple single file chunking)
 print("Ingesting corpus.txt...")
 try:
-    with open("corpus.txt", "r", encoding="utf-8") as f:
+    with open(CORPUS_PATH, "r", encoding="utf-8") as f:
         text_content = f.read()
     
     # Very simple manual split by double newlines (paragraphs)
     # For a real app, use RecursiveCharacterTextSplitter
     chunks = [chunk.strip() for chunk in text_content.split("\n\n") if chunk.strip()]
     
-    # Generate random IDs or let the store handle it. It's safer to provide metadata and texts.
-    vector_store.add_texts(
-        texts=chunks,
-        metadatas=[{"source": "corpus.txt", "chunk_index": i} for i in range(len(chunks))]
-    )
+    # Batch insertion to avoid Gemini Free Tier rate limits
+    batch_size = 5
+    total_batches = (len(chunks) - 1) // batch_size + 1
+    
+    import time
+    for i in range(0, len(chunks), batch_size):
+        batch_chunks = chunks[i:i + batch_size]
+        batch_metadatas = [{"source": CORPUS_PATH, "chunk_index": j} for j in range(i, i + len(batch_chunks))]
+        
+        vector_store.add_texts(
+            texts=batch_chunks,
+            metadatas=batch_metadatas
+        )
+        print(f"Ingested batch {i//batch_size + 1}/{total_batches}...")
+        
+        if i + batch_size < len(chunks):
+            time.sleep(4)
+            
     print(f"Successfully added {len(chunks)} chunks to Oracle Vector Store.")
 except Exception as e:
     print(f"Warning: Could not ingest corpus: {e}")
