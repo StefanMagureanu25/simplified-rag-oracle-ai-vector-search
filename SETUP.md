@@ -43,19 +43,3 @@ Start the FastAPI server from the root of the project:
 uvicorn src.app:app --reload
 ```
 Open your web browser and navigate to **[http://localhost:8000](http://localhost:8000)**. Click **"Ingest Corpus"** to embed the `data/corpus.txt` into Oracle.
-
----
-
-## Troubleshooting: Viewing Data in a SQL Client
-If you attempt to view the `corpus_vector_store` table in a tool like **DataGrip** or **DBeaver**, you may encounter a Java JDBC crash (`ORA-17004: Invalid column type`). This happens because older JDBC drivers do not know how to visually render Oracle 23ai `VECTOR` types.
-
-**The Fix:**
-Run this query to safely convert the vectors to strings for viewing:
-```sql
-SELECT 
-    id, 
-    text, 
-    json_serialize(metadata) as metadata, 
-    to_char(embedding) as embedding 
-FROM corpus_vector_store;
-```

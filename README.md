@@ -1,6 +1,6 @@
 # Simplified RAG with Oracle 23ai Vector Search
 
-This project is a minimal, elegant Retrieval-Augmented Generation (RAG) application. It demonstrates how to integrate **Google Gemini** language models with **Oracle Database 23ai** using its native `VECTOR` datatypes to perform semantic similarity searches.
+This is a minimal Retrieval-Augmented Generation (RAG) application demonstrating the integration of **Google Gemini** with **Oracle Database 23ai** using native `VECTOR` datatypes.
 
 ## Quick Start Overview
 
