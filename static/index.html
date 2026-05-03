@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oracle 23ai AI Vector RAG</title>
+    <meta name="description" content="A minimal Oracle 23ai RAG frontend">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar or Header -->
+        <header class="glass-header">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#F80000"/>
+                    <path d="M2 17L12 22L22 17" stroke="#F80000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="#F80000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h1>Oracle 23ai RAG</h1>
+            </div>
+            <button id="ingest-btn" class="glass-btn">Ingest Corpus</button>
+        </header>
+
+        <!-- Main Chat Interface -->
+        <main class="chat-container glass-panel">
+            <div class="chat-history" id="chat-history">
+                <div class="message ai-message">
+                    <div class="avatar ai-avatar">AI</div>
+                    <div class="message-content">
+                        Hello! I am connected to Oracle Database 23ai. Ask me a question based on the document corpus!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <form id="chat-form">
+                    <input type="text" id="user-input" placeholder="Ask anything about the corpus..." autocomplete="off" required>
+                    <button type="submit" class="send-btn" aria-label="Send">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
