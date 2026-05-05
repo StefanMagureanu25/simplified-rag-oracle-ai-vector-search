@@ -9,36 +9,39 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
     <div class="app-container">
-        <!-- Header -->
         <header class="header">
             <div class="logo">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="2" y1="12" x2="22" y2="12"></line>
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    <path
+                        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                    </path>
                 </svg>
                 <h1>European Explorer RAG</h1>
             </div>
             <button id="ingest-btn" class="btn">Ingest Knowledge Base</button>
         </header>
 
-        <!-- Main Chat Interface -->
         <main class="chat-container">
             <div class="chat-history" id="chat-history">
                 <div class="message ai-message">
                     <div class="avatar ai-avatar">AI</div>
                     <div class="message-content">
-                        Greetings! I am your European knowledge assistant. Ask me anything about Europe's cities, countries, and history.
+                        Greetings! I am your European knowledge assistant. Ask me anything about Europe's cities,
+                        countries, and history.
                     </div>
                 </div>
             </div>
 
-            <!-- Input Area -->
             <div class="input-area">
                 <form id="chat-form">
-                    <input type="text" id="user-input" placeholder="Ask about Rome, Paris, or Berlin..." autocomplete="off" required>
+                    <input type="text" id="user-input" placeholder="Ask about Rome, Paris, or Berlin..."
+                        autocomplete="off" required>
                     <button type="submit" class="send-btn" aria-label="Send">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -51,7 +54,6 @@
         </main>
     </div>
 
-    <!-- Notification Toast -->
     <div id="toast" class="toast"></div>
 
     <script src="/static/script.js"></script>

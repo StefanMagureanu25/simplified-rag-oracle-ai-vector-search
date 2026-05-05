@@ -145,12 +145,11 @@ async def ingest_endpoint():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-import os as _os
-if not _os.path.exists(STATIC_PATH):
-    _os.makedirs(STATIC_PATH)
+if not os.path.exists(STATIC_PATH):
+    os.makedirs(STATIC_PATH)
     
 app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
 
 @app.get("/")
 async def serve_frontend():
-    return FileResponse(_os.path.join(STATIC_PATH, "index.html"))
+    return FileResponse(os.path.join(STATIC_PATH, "index.html"))
